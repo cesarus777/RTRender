@@ -1,12 +1,12 @@
 # RTRender
 
-##Build
+## Build
   1. Create build directory somewhere `mkdir /path/to/build`
   2. Go to the build directory `cd /path/to/build`
   3. Run cmake `cmake /path/to/RTRender`
   4. Run make `make`
 
-##Run
+## Run
   * `-g` draws polyline golden spiral
   * `-ng` drawn polyline non-golden spiral
   * `-t` draws triangles
