@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 #include "geometry.hpp"
 
