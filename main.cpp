@@ -1,7 +1,7 @@
 #include <cstring>
 #include <iostream>
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 #include "obj_parser.hpp"
 #include "primitives.hpp"
