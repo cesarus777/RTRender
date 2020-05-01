@@ -14,4 +14,6 @@
   * `-rand /path/to/obj/file` paints wireframe model in random colors
   * `-rast /path/to/obj/file` rasterizes model
   * `-remov /path/to/obj/file` rasterizes model removing back sides
+  * `-color /path/to/obj/file` rasterizes model with textures, if model name is
+    `model.obj` textures must be named `model_diffuse.tga`
 
