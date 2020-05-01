@@ -8,7 +8,7 @@
 
 enum { WIDTH = 800, HEIGHT = 800, MAX = 1 };
 
-enum status_t { GOLD, NOT_GOLD, TRIANGLE, WIREFRAME, RAND, RAST, REMOV };
+enum status_t { GOLD, NOT_GOLD, TRIANGLE, WIREFRAME, RAND, RAST, REMOV, COLOR };
 
 void render_wireframe(SDL_Renderer *renderer, obj_model *model)
 {
@@ -127,6 +127,48 @@ void render_removal_rasterisator(SDL_Renderer *renderer, obj_model *model)
       char alpha = static_cast<char>(0);
       SDL_SetRenderDrawColor(renderer, red, green, blue, alpha);
       draw_triangle(renderer, coords[0], coords[1], coords[2], zbuf, w, h);
+#ifdef FLUSH
+      SDL_RenderPresent(renderer);
+#endif
+    }
+  }
+}
+
+void render_color_removal(SDL_Renderer *renderer, obj_model *model)
+{
+  vec3d light(0.0, 0.0, -1.0);
+  const size_t w = WIDTH;
+  const size_t h = HEIGHT;
+  double *zbuf = new double[w * h];
+  for(size_t i = 0; i < h; ++i)
+    for(size_t j = 0; j < w; ++j)
+      zbuf[j + i * w] = -std::numeric_limits<double>::max();
+
+  for(size_t i = 0; i < model->nfaces(); ++i)
+  {
+    auto face = model->face(i);
+    vec3i coords[3];
+    vec3d world[3];
+    for(size_t j = 0; j < 3; ++j)
+    {
+      auto v = model->vertice(face[j]);
+      int x = (model->max() + model->xshift() + v.x)
+        * WIDTH / (2 * model->max());
+      int y = (model->max() + model->yshift() - v.y)
+        * HEIGHT / (2 * model->max());
+      coords[j] = vec3i(x, y, v.z);
+      world[j] = v;
+    }
+    vec3d n = (world[2] - world[0]) ^ (world[1] - world[0]);
+    n.normalize();
+    double intensity = n * light;
+    if(intensity > 0.0)
+    {
+      vec2i tv[3];
+      for(size_t k = 0; k < 3; ++k)
+        tv[k] = model->tv(i, k);
+      draw_triangle(renderer, model, coords[0], coords[1], coords[2],
+          tv[0], tv[1], tv[2], intensity, zbuf, w, h);
 #ifdef FLUSH
       SDL_RenderPresent(renderer);
 #endif
@@ -288,6 +330,10 @@ int main(int argc, char **argv)
     {
       status = REMOV;
     }
+    else if(strcmp(argv[1], "-color") == 0)
+    {
+      status = COLOR;
+    }
     else
     {
       std::cerr << "unknown args" << std::endl;
@@ -326,6 +372,9 @@ int main(int argc, char **argv)
       break;
     case REMOV:
       render_removal_rasterisator(renderer, model);
+      break;
+    case COLOR:
+      render_color_removal(renderer, model);
       break;
     case TRIANGLE:
       render_triangles(renderer);
