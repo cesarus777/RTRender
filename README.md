@@ -8,7 +8,7 @@
 
 ## Run
   * `-s <sample>`    draws a hard-coded geometric sample named `<sample>`
-#### List of possible `<figure>` variants:
+    #### List of possible `<sample>` variants:
         1. `spiral`
         2. `golden_spiral`
         3. `triangles`
@@ -16,7 +16,7 @@
           
   * `-o <object>`    opens `.obj` file named `<object>`
   * `-m <mode> `     chooses a way to render the `<object>`
-#### List of possible `<mode>` variants:
+     #### List of possible `<mode>` variants:
         1. `wire`       - draws wireframe model
         2. `rasterize`  - rasterizes model
         3. `rand`       - paints model in random colors
