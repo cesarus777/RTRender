@@ -10,8 +10,8 @@ include_directories(${SDL2_INCLUDE_DIRS} ${SDL2IMAGE_INCLUDE_DIRS})
 
 add_library(RTRender-src OBJECT
     primitives.cpp
+    rtrenderer.cpp
 )
-
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")  
     # using G++

@@ -5,8 +5,8 @@
 #include <string>
 #include <vector>
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include <SDL.h>
+#include <SDL_image.h>
 
 #include "geometry.hpp"
 
@@ -85,6 +85,9 @@ public:
     return rgb;
   }
 };
+
+
+
 
 class obj_model
 {
@@ -168,11 +171,17 @@ public:
     diff_name += "_diffuse.tga";
     diffuse.read_tga(diff_name.data());
   }
+  
+  
+  
 
   ~obj_model()
   {
     IMG_Quit();
   }
+
+
+
 
   size_t nvertices() const { return vertices.size(); }
 
