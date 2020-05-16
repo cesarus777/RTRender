@@ -17,10 +17,11 @@
   * `-o <object>`    opens `.obj` file named `<object>`
   * `-m <mode> `     chooses a way to render the `<object>`
 #### List of possible `<mode>` variants:
-        1. `wire`       - draws wireframe model
-        2. `rasterize`  - rasterizes model
-        3. `rand`       - paints model in random colors
-        4. `remove`     - rasterizes model removing back sides
-        5. `color`      - rasterizes model with textures `.tga` file (if the model name is `model.obj` textures must be named `model_diffuse.tga`)
-
+        1. `wire`           - draws wireframe of the model
+        2. `rasterize`      - rasterizes the model (uses z-buffer)
+        3. `texture`      - rasterizes model with texture `.tga` file (if the model name is `model.obj` textures must be named `model_diffuse.tga`)
+        4. `zbuf`       - renders z-buffer of the model
+        5. `rand`           - paints model in random colors
+        6. `dont_remove`    - rasterizes the model (no z-buffer)
+      
   * `-h`     shows usage info
