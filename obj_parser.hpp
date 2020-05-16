@@ -5,21 +5,25 @@
 #include <string>
 #include <vector>
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include <SDL.h>
+#include <SDL_image.h>
 
 #include "geometry.hpp"
 
 class tga_image
 {
 private:
-  SDL_Surface *image;
+  SDL_Surface *image = nullptr;
 public:
   tga_image() : image(NULL) {}
   tga_image(const char* filename)
   {
     SDL_RWops *rwop;
     rwop = SDL_RWFromFile(filename, "rb");
+
+    if (rwop == nullptr)
+        throw no_file();
+        
     image = IMG_LoadTGA_RW(rwop);
     SDL_RWclose(rwop);
     if(!image)
@@ -35,15 +39,24 @@ public:
   size_t width() { return image->w; }
   size_t height() { return image->h; }
 
+
+
   void read_tga(const char* filename)
   {
     SDL_RWops *rwop;
     rwop = SDL_RWFromFile(filename, "rb");
-    image = IMG_LoadTGA_RW(rwop);
+    if (rwop == nullptr)
+        throw no_file();
+
+//    SDL_FreeSurface(image);             // free previously opened
+    image = IMG_LoadTGA_RW(rwop);   
     SDL_RWclose(rwop);
     if(!image)
       throw std::runtime_error("can't open " + std::string(filename));
   }
+  
+  
+  
 
   SDL_Color pixel_color(int x, int y)
   {
@@ -84,7 +97,21 @@ public:
     SDL_GetRGB(p, image->format, &rgb.r, &rgb.g, &rgb.b);
     return rgb;
   }
+  
+  
+    class no_file : public std::exception
+    {
+        public:
+            virtual const char* what() const noexcept override
+            { return "No such file"; }
+    };
 };
+
+
+
+
+
+
 
 class obj_model
 {
@@ -102,6 +129,7 @@ public:
   {
     std::ifstream ifs;
     ifs.open(filename, std::ifstream::in);
+
     if(ifs.fail())
       throw std::ios_base::failure("Can't open model obj file");
     while(ifs)
@@ -157,8 +185,10 @@ public:
         faces.push_back(f);
       }
     }
+    
+     
     IMG_Init(0);
-    auto iter = filename.rbegin();
+    auto iter = filename.rbegin();     
     for(; iter != filename.rend(); ++iter)
     {
       if(*iter == '.')
@@ -166,13 +196,24 @@ public:
     }
     std::string diff_name(filename.begin(), --iter.base());
     diff_name += "_diffuse.tga";
-    diffuse.read_tga(diff_name.data());
+    
+    try{ diffuse.read_tga( diff_name.data()); }
+
+    catch( tga_image::no_file& e)
+    {   std::cout << "Warning: no texture found"  << std::endl;  }
+           
   }
+  
+  
+  
 
   ~obj_model()
   {
     IMG_Quit();
   }
+
+
+
 
   size_t nvertices() const { return vertices.size(); }
 
