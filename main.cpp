@@ -7,12 +7,8 @@ int main(int argc, char **argv)
 
     try
     {
- 
         RTR::Window r( argc, argv);
-//        std::cout << "2 " << std::endl;
-        r.static_display();
-        
-  //      std::cout << " 3" << std::endl;
+        r.xy_move_display();   
     }
     catch(std::exception& e)
     {

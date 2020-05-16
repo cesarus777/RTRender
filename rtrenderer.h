@@ -12,9 +12,10 @@
 #include <iostream>
 #include <algorithm>
 #include <cmath>
+#include <cassert>
 
 
-
+#define USE_MEMSET
 
 
 
@@ -26,10 +27,16 @@ namespace RTR
 
    
     
+    const uint8_t R_BGR = 0;
+    const uint8_t G_BGR = 0;
+    const uint8_t B_BGR = 0;
+    const uint8_t A_BGR = 255;
     
-    const double W_SHIFT_DEFAULT    = 0;  // determines .obj position 
-    const double H_SHIFT_DEFAULT    = 0;  // on the screen
+    const double W_SHIFT_DEFAULT    = 0.1;  // determines .obj position 
+    const double H_SHIFT_DEFAULT    = 0.;   // on the screen
     const double OBJ_SCALE_DEFAULT  = 400;  // determines size of the model on the screen
+    const double Y_SHIFT_SPEED_DEFAULT    = 0.03;  // WASD speed
+    const double X_SHIFT_SPEED_DEFAULT    = 0.03;  //
     
     
     using zbuf_depth_t              = int32_t;
@@ -77,6 +84,9 @@ namespace RTR
         int         WIN_WIDTH   = WIN_WIDTH_DEFAULT;
         int         WIN_HEIGHT  = WIN_HEIGHT_DEFAULT;
         
+        double Y_SPEED    = 0;  //
+        double X_SPEED    = 0;  //
+        
 
         private:
             /* draw the <mode_t> target */
@@ -90,6 +100,7 @@ namespace RTR
             void render_lines();
             void render_triangles();
             void render_z_buffer();
+            void clear_screen();
             
             
             // Pimitives:
@@ -104,6 +115,10 @@ namespace RTR
             void draw_triangle( vec3i v1, vec3i v2, vec3i v3,
                                 vec2i t1, vec2i t2, vec2i t3,
                                 double intensity);
+                                
+                                
+             /* zbuf */
+             void zbuf_clear();
             
         public:
             Window( int argc, char** argv);
@@ -114,7 +129,8 @@ namespace RTR
             void  show_usage();
                         
             /* draw the model and wait for an event */
-            void static_display();      
+            void static_display();  
+            void xy_move_display();
             
                 
             

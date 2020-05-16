@@ -1,7 +1,7 @@
 #include "rtrenderer.h"
 
 
-// Basic methods:
+// Basic methods:в 
 ///////////////////////////////////////////////////////////////////////////
 //  Constructor/Destructor:
 //
@@ -16,20 +16,12 @@
         int ret = SDL_CreateWindowAndRenderer(  WIN_WIDTH,  WIN_HEIGHT, 0,
                                                 &window, &renderer);     
         if (ret < 0) throw sdl_error();
-          
-        // zbuf init
-        zbuf = new zbuf_depth_t[WIN_WIDTH * WIN_HEIGHT];
-            for(int i = 0; i < WIN_HEIGHT; ++i)
-                for(int j = 0; j < WIN_WIDTH; ++j)
-                    zbuf[j + i * WIN_WIDTH] = 
-                        std::numeric_limits<zbuf_depth_t>::min();
 
+        zbuf = new zbuf_depth_t[WIN_WIDTH * WIN_HEIGHT];
+        zbuf_clear();          
+        
         // clear the screen
-        if( SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255) < 0 )
-            throw sdl_error();
-             
-        if ( SDL_RenderClear(renderer) < 0)
-            throw sdl_error();
+        clear_screen();
         
         SDL_RenderPresent(renderer);
         
@@ -53,7 +45,6 @@
 //
 //
 ///////////////////////////////////////////////////////////////////////////
-
 
 
 
@@ -175,20 +166,85 @@
 // Supported window modes:    
 //  
     void RTR::Window::static_display()
-    {                    
-        draw_target(mode);
+    {
+            draw_target (mode);
 
 
-        SDL_Event event;
-        for(;;)
-        {
-            if (SDL_WaitEvent( &event) == 0) throw sdl_error();
+            SDL_Event event;
+            for(;;)
+            {
+                if (SDL_WaitEvent( &event) == 0) throw sdl_error();
                    
-            if ((event.type == SDL_QUIT) ||
+                if ((event.type == SDL_QUIT) ||
                                     (event.type == SDL_KEYDOWN))
                 return;
+            }
+        
+    }
+    
+    void RTR::Window::xy_move_display()
+    {
+        SDL_Event event;
+        
+        draw_target( mode);
+
+        while ( SDL_WaitEvent( &event))
+        {
+            switch(event.type)
+            {
+                case SDL_QUIT : return;
+            
+                case SDL_KEYDOWN : switch( event.key.keysym.scancode)
+                {
+                    case SDL_SCANCODE_W:
+                                    Y_SPEED =  Y_SHIFT_SPEED_DEFAULT;
+                                    break;
+
+                    case SDL_SCANCODE_A:
+                                    X_SPEED = -X_SHIFT_SPEED_DEFAULT;
+                                    break;
+                                    
+                    case SDL_SCANCODE_S:
+                                    Y_SPEED = -Y_SHIFT_SPEED_DEFAULT;
+                                    break;
+                                    
+                    case SDL_SCANCODE_D: 
+                                    X_SPEED =  X_SHIFT_SPEED_DEFAULT;
+                                    break;
+                    default : break;
+                }
+                break;
+                
+                case SDL_KEYUP : switch( event.key.keysym.scancode)
+                {
+                    case SDL_SCANCODE_W:
+                                    if (Y_SPEED > 0) Y_SPEED = 0;
+                                    break;
+
+                    case SDL_SCANCODE_A:
+                                    if (X_SPEED < 0) X_SPEED = 0;
+                                    break;
+                                    
+                    case SDL_SCANCODE_S:
+                                    if (Y_SPEED < 0) Y_SPEED = 0;
+                                    break;
+                                    
+                    case SDL_SCANCODE_D: 
+                                    if (X_SPEED > 0) X_SPEED = 0;
+                                    break;
+                    default : break;
+                }
+                
+                default : break;
+            }
+            
+            H_SHIFT += Y_SPEED;
+            W_SHIFT += X_SPEED;
+            
+            draw_target( mode);
         }
         
+        throw sdl_error();
     }
 //
 //
@@ -202,8 +258,7 @@
 //
     void RTR::Window::draw_target(mode_t m)
     {
-        //SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        
+        clear_screen();
         switch(m)
         {
             case WIREFRAME: render_wireframe();
@@ -354,7 +409,7 @@ void RTR::Window::render_dnt_remove()
 
 void RTR::Window::render_rasterization()
 {
-
+    zbuf_clear();
     vec3d light(1.0, .0, -1.0);
   
     for(size_t i = 0; i < model->nfaces(); ++i)
@@ -406,6 +461,7 @@ void RTR::Window::render_rasterization()
 
 void RTR::Window::render_z_buffer()
 {
+    zbuf_clear();
     vec3d light(.0, .0, -1.0);
   
     for(size_t i = 0; i < model->nfaces(); ++i)
@@ -471,8 +527,9 @@ void RTR::Window::render_z_buffer()
 
 void RTR::Window::render_texture()
 {
+
+    zbuf_clear();
     vec3d light(-1.0, .0, -1.0);
-//  vec3d light(0.0, 0.0, -1.0);
 
 
     for(size_t i = 0; i < model->nfaces(); ++i)
@@ -631,8 +688,42 @@ void RTR::Window::render_triangles()
 
     return;
 }
-
-
+//
+//
 ///////////////////////////////////////////////////////////////////////////
 
+///////////////////////////////////////////////////////////////////////////
+//MISC
+//
+void RTR::Window::zbuf_clear()
+{
+    assert( zbuf != nullptr);
+    
+    #ifdef USE_MEMSET
+    memset( zbuf, -127, WIN_HEIGHT * WIN_WIDTH * sizeof(zbuf_depth_t));
+    #else
+    for(int i = 0; i < WIN_HEIGHT; ++i)
+        for(int j = 0; j < WIN_WIDTH; ++j)
+               zbuf[j + i * WIN_WIDTH] = 
+                        std::numeric_limits<zbuf_depth_t>::min();
+    #endif     
+    return;
+}
 
+
+
+void RTR::Window::clear_screen()
+{
+    if( SDL_SetRenderDrawColor(renderer, R_BGR,
+                                         G_BGR,
+                                         B_BGR,
+                                         A_BGR) < 0 )
+    throw sdl_error();
+             
+    if ( SDL_RenderClear(renderer) < 0)
+         throw sdl_error();
+
+}
+//
+//
+///////////////////////////////////////////////////////////////////////////
