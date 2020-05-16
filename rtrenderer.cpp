@@ -187,6 +187,9 @@
         SDL_Event event;
         
         draw_target( mode);
+        
+        bool zoomInUp  = true;
+        bool zoomOutUp = true;
 
         while ( SDL_WaitEvent( &event))
         {
@@ -196,24 +199,33 @@
             
                 case SDL_KEYDOWN : switch( event.key.keysym.scancode)
                 {
-                    case SDL_SCANCODE_W:
+                    case SDL_SCANCODE_W :
                                     Y_SPEED =  Y_SHIFT_SPEED_DEFAULT;
                                     break;
 
-                    case SDL_SCANCODE_A:
+                    case SDL_SCANCODE_A :
                                     X_SPEED = -X_SHIFT_SPEED_DEFAULT;
                                     break;
                                     
-                    case SDL_SCANCODE_S:
+                    case SDL_SCANCODE_S :
                                     Y_SPEED = -Y_SHIFT_SPEED_DEFAULT;
                                     break;
                                     
-                    case SDL_SCANCODE_D: 
+                    case SDL_SCANCODE_D : 
                                     X_SPEED =  X_SHIFT_SPEED_DEFAULT;
+                                    break;
+                                    
+                    case SDL_SCANCODE_I :
+                                    if (zoomInUp) OBJ_SCALE *= OBJ_ZOOM_MULTIPLIER;
+                                    break;
+                                    
+                    case SDL_SCANCODE_O :
+                                    if (zoomOutUp) OBJ_SCALE /= OBJ_ZOOM_MULTIPLIER;
                                     break;
                     default : break;
                 }
                 break;
+                
                 
                 case SDL_KEYUP : switch( event.key.keysym.scancode)
                 {
@@ -231,6 +243,13 @@
                                     
                     case SDL_SCANCODE_D: 
                                     if (X_SPEED > 0) X_SPEED = 0;
+                                    break;
+                                    
+                    case SDL_SCANCODE_I :
+                                    zoomInUp = true;
+                                    break;
+                    case SDL_SCANCODE_O :
+                                    zoomOutUp = true;
                                     break;
                     default : break;
                 }
@@ -296,6 +315,54 @@
         return;
   }
 
+
+
+
+
+void RTR::Window::render_texture()
+{
+
+    zbuf_clear();
+    vec3d light(-1.0, .0, -1.0);
+
+
+    for(size_t i = 0; i < model->nfaces(); ++i)
+    {
+        auto face = model->face(i);
+        vec3i coords[3];
+        vec3d world[3];
+        for(size_t j = 0; j < 3; ++j)
+        {
+            auto v = model->vertice(face[j]);
+            int  x = ( model->xshift() - v.x + W_SHIFT) * OBJ_SCALE
+                                                + WIN_WIDTH / 2.0;
+                                                    
+            int  y = ( model->yshift() - v.y - H_SHIFT) * OBJ_SCALE
+                                                + WIN_HEIGHT / 2.0;
+            coords[j] = vec3i(x, y, (v.z* ZBUF_SCALE));
+            world[j] = v;
+        }
+    
+        vec3d n = (world[2] - world[0]) ^ (world[1] - world[0]);
+    
+        n.normalize();
+        light.normalize();
+        double intensity = n * light;
+    
+        if(intensity > 0.0)
+        {
+            intensity *= intensity;
+            vec2i tv[3];
+            for( size_t k = 0; k < 3; ++k)
+            tv[k] = model->tv(i, k);
+            draw_triangle(  coords[0],  coords[1],  coords[2],
+                            tv[0],      tv[1],      tv[2], 
+                            intensity);
+        }
+    }
+    
+    return;
+}
 
 
 
@@ -523,52 +590,6 @@ void RTR::Window::render_z_buffer()
 
 
 
-
-
-void RTR::Window::render_texture()
-{
-
-    zbuf_clear();
-    vec3d light(-1.0, .0, -1.0);
-
-
-    for(size_t i = 0; i < model->nfaces(); ++i)
-    {
-        auto face = model->face(i);
-        vec3i coords[3];
-        vec3d world[3];
-        for(size_t j = 0; j < 3; ++j)
-        {
-            auto v = model->vertice(face[j]);
-            int  x = ( model->xshift() - v.x + W_SHIFT) * OBJ_SCALE
-                                                + WIN_WIDTH / 2.0;
-                                                    
-            int  y = ( model->yshift() - v.y - H_SHIFT) * OBJ_SCALE
-                                                + WIN_HEIGHT / 2.0;
-            coords[j] = vec3i(x, y, (v.z* ZBUF_SCALE));
-            world[j] = v;
-        }
-    
-        vec3d n = (world[2] - world[0]) ^ (world[1] - world[0]);
-    
-        n.normalize();
-        light.normalize();
-        double intensity = n * light;
-    
-        if(intensity > 0.0)
-        {
-            intensity *= intensity;
-            vec2i tv[3];
-            for( size_t k = 0; k < 3; ++k)
-            tv[k] = model->tv(i, k);
-            draw_triangle(  coords[0],  coords[1],  coords[2],
-                            tv[0],      tv[1],      tv[2], 
-                            intensity);
-        }
-    }
-    
-    return;
-}
 
 
 

@@ -32,9 +32,11 @@ namespace RTR
     const uint8_t B_BGR = 0;
     const uint8_t A_BGR = 255;
     
-    const double W_SHIFT_DEFAULT    = 0.1;  // determines .obj position 
-    const double H_SHIFT_DEFAULT    = 0.;   // on the screen
-    const double OBJ_SCALE_DEFAULT  = 400;  // determines size of the model on the screen
+    const double W_SHIFT_DEFAULT        = 0.;  // determines .obj position 
+    const double H_SHIFT_DEFAULT        = 0.;   // on the screen
+    const double OBJ_SCALE_DEFAULT      = 400.;  // determines size of the model on the screen
+    const double OBJ_ZOOM_MULTIPLIER    = 2.; 
+        
     const double Y_SHIFT_SPEED_DEFAULT    = 0.03;  // WASD speed
     const double X_SHIFT_SPEED_DEFAULT    = 0.03;  //
     
