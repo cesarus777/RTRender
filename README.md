@@ -1,5 +1,4 @@
 # RTRender
-RTRender is a simple graphic render of 3D .obj models with .tga textures
 
 ## Build
   1. Create build directory somewhere `mkdir /path/to/build`
