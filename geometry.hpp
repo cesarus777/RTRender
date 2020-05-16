@@ -1,22 +1,14 @@
 #pragma once
 
-#include <array>
 #include <cmath>
 #include <stdexcept>
 
-template <typename T, size_t size> struct vec {};
-
-using vec2d = vec<double, 2>;
-using vec2i = vec<int, 2>;
-using vec3d = vec<double, 3>;
-using vec3i = vec<int, 3>;
-
-template <typename T> struct vec<T, 3>
+template <typename T> struct vec3
 {
   T x, y, z;
-  vec() : x(0), y(0), z(0) {}
-  vec(T _x, T _y, T _z) : x(_x), y(_y), z(_z) {}
-  template <typename U> vec(const vec<U, 3> &v) : x(v.x), y(v.y), z(v.z) {}
+  vec3() : x(0), y(0), z(0) {}
+  vec3(T _x, T _y, T _z) : x(_x), y(_y), z(_z) {}
+  template <typename U> vec3(const vec3<U> &v) : x(v.x), y(v.y), z(v.z) {}
 
   T& operator[](const size_t i)
   {
@@ -33,33 +25,33 @@ template <typename T> struct vec<T, 3>
     }
   }
 
-  vec<T, 3> operator^(const vec<T, 3> &another) const
+  vec3<T> operator^(const vec3<T> &another) const
   {
-    return vec<T, 3>(y * another.z - z * another.y,
+    return vec3<T>(y * another.z - z * another.y,
                    z * another.x - x * another.z,
                    x * another.y - y * another.x);
   }
 
-  vec<T, 3> operator+(const vec<T, 3> &another) const
+  vec3<T> operator+(const vec3<T> &another) const
   {
-    return vec<T, 3>(x + another.x,
+    return vec3<T>(x + another.x,
                    y + another.y,
                    z + another.z);
   }
 
-  vec<T, 3> operator-(const vec<T, 3> &another) const
+  vec3<T> operator-(const vec3<T> &another) const
   {
-    return vec<T, 3>(x - another.x,
+    return vec3<T>(x - another.x,
                    y - another.y,
                    z - another.z);
   }
 
-  vec<T, 3> operator*(const double k) const
+  vec3<T> operator*(const double k) const
   {
-    return vec<T, 3>(x * k, y * k, z * k);
+    return vec3<T>(x * k, y * k, z * k);
   }
 
-  double operator*(const vec<T, 3> &another) const
+  double operator*(const vec3<T> &another) const
   {
     return x * another.x + y * another.y + z * another.z;
   }
@@ -69,19 +61,19 @@ template <typename T> struct vec<T, 3>
     return std::sqrt(x * x + y * y + z * z);
   }
 
-  vec<T, 3>& normalize()
+  vec3<T>& normalize()
   {
     *this = *this * (1.0 / norm());
     return *this;
   }
 };
 
-template <typename T> struct vec<T, 2>
+template <typename T> struct vec2
 {
   T x, y;
-  vec() : x(0), y(0) {}
-  vec(T _x, T _y) : x(_x), y(_y) {}
-  template <typename U> vec(const vec<U, 2> &v) : x(v.x), y(v.y) {}
+  vec2() : x(0), y(0) {}
+  vec2(T _x, T _y) : x(_x), y(_y) {}
+  template <typename U> vec2(const vec2<U> &v) : x(v.x), y(v.y) {}
 
   T& operator[](const size_t i)
   {
@@ -96,43 +88,31 @@ template <typename T> struct vec<T, 2>
     }
   }
 
-  vec<T, 2> operator+(const vec<T, 2> &another) const
+  vec2<T> operator+(const vec2<T> &another) const
   {
-    return vec<T, 2>(x + another.x,
+    return vec2<T>(x + another.x,
                    y + another.y);
   }
 
-  vec<T, 2> operator-(const vec<T, 2> &another) const
+  vec2<T> operator-(const vec2<T> &another) const
   {
-    return vec<T, 2>(x - another.x,
+    return vec2<T>(x - another.x,
                    y - another.y);
   }
 
-  vec<T, 2> operator*(const double k) const
+  vec2<T> operator*(const double k) const
   {
-    return vec<T, 2>(x * k, y * k);
+    return vec2<T>(x * k, y * k);
   }
 
-  double operator*(const vec<T, 2> &another) const
+  double operator*(const vec2<T> &another) const
   {
     return x * another.x + y * another.y;
   }
 };
 
-template <typename T, size_t size> struct triangle
-{
-  std::array<vec<T, size>, 3> verts;
-
-  triangle() {}
-
-  triangle(vec<T, size> v1, vec<T, size> v2, vec<T, size> v3)
-  {
-    verts = { v1, v2, v3 };
-  }
-
-  auto& operator[](const size_t i)
-  {
-    return verts[i];
-  }
-};
+typedef vec2<double> vec2d;
+typedef vec2<int>    vec2i;
+typedef vec3<double> vec3d;
+typedef vec3<int>    vec3i;
 

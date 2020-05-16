@@ -5,8 +5,8 @@
 #include <string>
 #include <vector>
 
-#include <SDL.h>
-#include <SDL_image.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 #include "geometry.hpp"
 
@@ -15,7 +15,7 @@ class tga_image
 private:
   SDL_Surface *image;
 public:
-  tga_image() : image(nullptr) {}
+  tga_image() : image(NULL) {}
   tga_image(const char* filename)
   {
     SDL_RWops *rwop;
@@ -32,8 +32,8 @@ public:
       SDL_FreeSurface(image);
   }
 
-  size_t width() const { return image->w; }
-  size_t height() const { return image->h; }
+  size_t width() { return image->w; }
+  size_t height() { return image->h; }
 
   void read_tga(const char* filename)
   {
@@ -80,9 +80,9 @@ public:
         throw std::runtime_error("unknown pixel format : strange bpp");
     }
 
-    SDL_Color clr;
-    SDL_GetRGB(p, image->format, &clr.r, &clr.g, &clr.b);
-    return clr;
+    SDL_Color rgb;
+    SDL_GetRGB(p, image->format, &rgb.r, &rgb.g, &rgb.b);
+    return rgb;
   }
 };
 
@@ -103,7 +103,7 @@ public:
     std::ifstream ifs;
     ifs.open(filename, std::ifstream::in);
     if(ifs.fail())
-      throw std::runtime_error("Can't open model obj file");
+      throw std::ios_base::failure("Can't open model obj file");
     while(ifs)
     {
       std::string str;
@@ -128,6 +128,7 @@ public:
         vec2d tmp;
         ifs >> tmp[0] >> tmp[1];
         texture_verts.push_back(tmp);
+        //ifs >> tmp[0];
       }
       else if(str == "vn")
       {
@@ -165,14 +166,7 @@ public:
     }
     std::string diff_name(filename.begin(), --iter.base());
     diff_name += "_diffuse.tga";
-    try
-    {
-      diffuse.read_tga(diff_name.data());
-    }
-    catch(const std::runtime_error& e)
-    {
-      std::cerr << e.what() << std::endl;
-    }
+    diffuse.read_tga(diff_name.data());
   }
 
   ~obj_model()
@@ -199,17 +193,17 @@ public:
 
   vec3d vertice(size_t i) const { return vertices[i]; }
 
-  std::vector<int> face(size_t i) const
+  std::vector<int> face(size_t i)
   {
     std::vector<int> res;
-    for(const auto& elem : faces[i])
-      res.push_back(elem.x);
+    for(auto& elem : faces[i])
+      res.push_back(elem[0]);
     return res;
   }
 
-  vec2i tv(size_t nface, size_t nvert) const
+  vec2i tv(size_t nface, size_t nvert)
   {
-    size_t i = faces[nface][nvert].y;
+    size_t i = faces[nface][nvert][1];
     return vec2i(texture_verts[i].x * diffuse.width(),
                  texture_verts[i].y * diffuse.height());
   }
@@ -217,42 +211,12 @@ public:
   SDL_Color tv_clr(size_t nface, size_t nvert)
   {
     vec2i t = tv(nface, nvert);
-    SDL_Color color;
-    try
-    {
-      color = diffuse.pixel_color(t.x, t.y);
-    }
-    catch(const std::out_of_range& e)
-    {
-      std::cerr << e.what() << std::endl;
-      color = { 0x00, 0x00, 0x00, 0xff };
-    }
-    catch(const std::runtime_error& e)
-    {
-      std::cerr << e.what() << std::endl;
-      color = { 0x00, 0x00, 0x00, 0xff };
-    }
-    return color;
+    return diffuse.pixel_color(t.x, t.y);
   }
 
   SDL_Color tv_clr(int x, int y)
   {
-    SDL_Color color;
-    try
-    {
-      color = diffuse.pixel_color(x, y);
-    }
-    catch(const std::out_of_range& e)
-    {
-      std::cerr << e.what() << std::endl;
-      color = { 0x00, 0x00, 0x00, 0xff };
-    }
-    catch(const std::runtime_error& e)
-    {
-      std::cerr << e.what() << std::endl;
-      color = { 0x00, 0x00, 0x00, 0xff };
-    }
-    return color;
+    return diffuse.pixel_color(x, y);
   }
 };
 

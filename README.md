@@ -1,5 +1,4 @@
 # RTRender
-RTRender is a simple graphic render of 3D .obj models with .tga textures
 
 ## Build
   1. Create build directory somewhere `mkdir /path/to/build`
@@ -17,5 +16,4 @@ RTRender is a simple graphic render of 3D .obj models with .tga textures
   * `-remov /path/to/obj/file` rasterizes model removing back sides
   * `-color /path/to/obj/file` rasterizes model with textures, if model name is
     `model.obj` textures must be named `model_diffuse.tga`
-  * `-size=num` sets window size num*num
 
