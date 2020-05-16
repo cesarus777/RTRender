@@ -1,101 +1,75 @@
 #include <cstring>
 #include <iostream>
-#include <string>
-#include <variant>
 
 #include <SDL.h>
 
-#include "exceptions.hpp"
 #include "obj_parser.hpp"
-#include "renderer.hpp"
+#include "primitives.hpp"
 
-enum mode_type { EMPTY, GOLD, NOT_GOLD, TRIANGLE, WIREFRAME, RAND, RAST, REMOV, COLOR };
+enum { WIDTH = 800, HEIGHT = 800, MAX = 1 };
 
-enum arg_t { UNKNOWN, WITHOUT_FILE, WITH_FILE, SIZE };
+enum status_t { GOLD, NOT_GOLD, TRIANGLE, WIREFRAME, RAND, RAST, REMOV, COLOR };
 
-struct arg_status_t
+void render_wireframe(SDL_Renderer *renderer, obj_model *model)
 {
-  std::variant<mode_type, size_t> info;
-  arg_t arg;
-};
-
-void render_wireframe(const workspace_t &workspace)
-{
-  const obj_model &model = workspace.obj();
-  double max = model.max();
-  double xshift = model.xshift();
-  double yshift = model.yshift();
-  size_t width = workspace.w_size();
-  size_t height = workspace.h_size();
-  for(size_t i = 0; i < model.nfaces(); ++i)
+  for(size_t i = 0; i < model->nfaces(); ++i)
   {
-    auto face = model.face(i);
+    auto face = model->face(i);
     for(size_t j = 0; j < 3; ++j)
     {
-      vec3d v1 = model.vertice(face[j]);
-      vec3d v2 = model.vertice(face[(j + 1) % 3]);
-      int x1 = (max + xshift + v1.x) * width / (2.0 * max);
-      int y1 = (max + yshift - v1.y) * height / (2.0 * max);
-      int x2 = (max + xshift + v2.x) * width / (2.0 * max);
-      int y2 = (max + yshift - v2.y) * height / (2.0 * max);
-      workspace.draw_line(x1, y1, x2, y2);
+      vec3d v1 = model->vertice(face[j]);
+      vec3d v2 = model->vertice(face[(j + 1) % 3]);
+      int x1 = (v1.x + MAX) * WIDTH / (2.0 * MAX);
+      int y1 = (MAX - v1.y) * HEIGHT / (2.0 * MAX);
+      int x2 = (v2.x + MAX) * WIDTH / (2.0 * MAX);
+      int y2 = (MAX - v2.y) * HEIGHT / (2.0 * MAX);
+      draw_line(renderer, x1, y1, x2, y2);
 #ifdef FLUSH
-      workspace.update();
+      SDL_RenderPresent(renderer);
 #endif
     }
   }
 }
 
-void render_randcolor(const workspace_t& workspace)
+void render_randcolor(SDL_Renderer *renderer, obj_model *model)
 {
-  const obj_model &model = workspace.obj();
-  double max = model.max();
-  double xshift = model.xshift();
-  double yshift = model.yshift();
-  size_t width = workspace.w_size();
-  size_t height = workspace.h_size();
-  for(size_t i = 0; i < model.nfaces(); ++i)
+  for(size_t i = 0; i < model->nfaces(); ++i)
   {
-    auto face = model.face(i);
-    triangle<int, 2> coords;
+    auto face = model->face(i);
+    vec2i coords[3];
     for(size_t j = 0; j < 3; ++j)
     {
-      auto v = model.vertice(face[j]);
-      double x = (max + xshift + v.x) * width / (2 * max);
-      double y = (max + yshift - v.y) * height / (2 * max);
+      auto v = model->vertice(face[j]);
+      double x = (v.x + MAX) * WIDTH / (2 * MAX) + 0.5;
+      double y = (MAX - v.y) * HEIGHT / (2 * MAX) + 0.5;
       coords[j] = vec2i(x, y);
     }
     int r = std::rand();
     char red = r % 256;
     char green = (r >> 8)  % 256;
     char blue = (r >> 16) % 256;
-    workspace.set_draw_color(red, green, blue);
-    workspace.draw_triangle(coords);
+    char alpha = (r >> 24) % 256;
+    SDL_SetRenderDrawColor(renderer, red, green, blue, alpha);
+    draw_triangle(renderer, coords[0], coords[1], coords[2]);
 #ifdef FLUSH
-    workspace.update();
+    SDL_RenderPresent(renderer);
 #endif
   }
 }
 
-void render_rasterisator(const workspace_t& workspace)
+void render_rasterisator(SDL_Renderer *renderer, obj_model *model)
 {
-  vec3d light(0.0, 0.0, -1.0);
-  const obj_model &model = workspace.obj();
-  double max = model.max();
-  double xshift = model.xshift();
-  double yshift = model.yshift();
-  size_t width = workspace.w_size();
-  size_t height = workspace.h_size();
-  for(size_t i = 0; i < model.nfaces(); ++i)
+  vec3d light(.0, .0, -1.0);
+  for(size_t i = 0; i < model->nfaces(); ++i)
   {
-    auto face = model.face(i);
-    triangle<int, 2> coords;
-    triangle<double, 3> world;
+    auto face = model->face(i);
+    vec2i coords[3];
+    vec3d world[3];
     for(size_t j = 0; j < 3; ++j)
     {
-      auto v = model.vertice(face[j]);
-      int x = (max + xshift + v.x) * width / (2 * max);
-      int y = (max + yshift - v.y) * height / (2 * max);
+      auto v = model->vertice(face[j]);
+      int x = (v.x + MAX) * WIDTH / (2 * MAX);
+      int y = (MAX - v.y) * HEIGHT / (2 * MAX);
       coords[j] = vec2i(x, y);
       world[j] = v;
     }
@@ -108,34 +82,36 @@ void render_rasterisator(const workspace_t& workspace)
       char green;
       char blue;
       red = green = blue = intensity * 255;
-      workspace.set_draw_color(red, green, blue);
-      workspace.draw_triangle(coords);
+      char alpha = static_cast<char>(0);
+      SDL_SetRenderDrawColor(renderer, red, green, blue, alpha);
+      draw_triangle(renderer, coords[0], coords[1], coords[2]);
 #ifdef FLUSH
-      workspace.update();
+      SDL_RenderPresent(renderer);
 #endif
     }
   }
 }
 
-void render_removal_rasterisator(const workspace_t& workspace)
+void render_removal_rasterisator(SDL_Renderer *renderer, obj_model *model)
 {
-  vec3d light(0.0, 0.0, -1.0);
-  const obj_model &model = workspace.obj();
-  double max = model.max();
-  double xshift = model.xshift();
-  double yshift = model.yshift();
-  size_t width = workspace.w_size();
-  size_t height = workspace.h_size();
-  for(size_t i = 0; i < model.nfaces(); ++i)
+  vec3d light(.0, .0, -1.0);
+  const size_t w = WIDTH;
+  const size_t h = HEIGHT;
+  double *zbuf = new double[w * h];
+  for(size_t i = 0; i < h; ++i)
+    for(size_t j = 0; j < w; ++j)
+      zbuf[j + i * w] = -std::numeric_limits<double>::max();
+
+  for(size_t i = 0; i < model->nfaces(); ++i)
   {
-    auto face = model.face(i);
-    triangle<int, 3> coords;
-    triangle<double, 3> world;
+    auto face = model->face(i);
+    vec3i coords[3];
+    vec3d world[3];
     for(size_t j = 0; j < 3; ++j)
     {
-      auto v = model.vertice(face[j]);
-      int x = (max + xshift + v.x) * width / (2 * max);
-      int y = (max + yshift - v.y) * height / (2 * max);
+      auto v = model->vertice(face[j]);
+      int x = (v.x + MAX) * WIDTH / (2 * MAX);
+      int y = (MAX - v.y) * HEIGHT / (2 * MAX);
       coords[j] = vec3i(x, y, v.z);
       world[j] = v;
     }
@@ -148,35 +124,38 @@ void render_removal_rasterisator(const workspace_t& workspace)
       char green;
       char blue;
       red = green = blue = intensity * 255;
-      workspace.set_draw_color(red, green, blue);
-      workspace.draw_triangle(coords);
+      char alpha = static_cast<char>(0);
+      SDL_SetRenderDrawColor(renderer, red, green, blue, alpha);
+      draw_triangle(renderer, coords[0], coords[1], coords[2], zbuf, w, h);
 #ifdef FLUSH
-      workspace.update();
+      SDL_RenderPresent(renderer);
 #endif
     }
   }
 }
 
-void render_color_removal(const workspace_t& workspace)
+void render_color_removal(SDL_Renderer *renderer, obj_model *model)
 {
   vec3d light(0.0, 0.0, -1.0);
-  const obj_model &model = workspace.obj();
-  double max = model.max();
-  double xshift = model.xshift();
-  double yshift = model.yshift();
-  size_t width = workspace.w_size();
-  size_t height = workspace.h_size();
+  const size_t w = WIDTH;
+  const size_t h = HEIGHT;
+  double *zbuf = new double[w * h];
+  for(size_t i = 0; i < h; ++i)
+    for(size_t j = 0; j < w; ++j)
+      zbuf[j + i * w] = -std::numeric_limits<double>::max();
 
-  for(size_t i = 0; i < model.nfaces(); ++i)
+  for(size_t i = 0; i < model->nfaces(); ++i)
   {
-    auto face = model.face(i);
-    triangle<int, 3> coords;
-    triangle<double, 3> world;
+    auto face = model->face(i);
+    vec3i coords[3];
+    vec3d world[3];
     for(size_t j = 0; j < 3; ++j)
     {
-      auto v = model.vertice(face[j]);
-      int x = (max + xshift + v.x) * width / (2 * max);
-      int y = (max + yshift - v.y) * height / (2 * max);
+      auto v = model->vertice(face[j]);
+      int x = (model->max() + model->xshift() + v.x)
+        * WIDTH / (2 * model->max());
+      int y = (model->max() + model->yshift() - v.y)
+        * HEIGHT / (2 * model->max());
       coords[j] = vec3i(x, y, v.z);
       world[j] = v;
     }
@@ -185,32 +164,34 @@ void render_color_removal(const workspace_t& workspace)
     double intensity = n * light;
     if(intensity > 0.0)
     {
-      triangle<int, 2> tv;
+      vec2i tv[3];
       for(size_t k = 0; k < 3; ++k)
-      {
-        tv[k] = model.tv(i, k);
-      }
-      workspace.draw_triangle(coords, tv, intensity);
+        tv[k] = model->tv(i, k);
+      draw_triangle(renderer, model, coords[0], coords[1], coords[2],
+          tv[0], tv[1], tv[2], intensity, zbuf, w, h);
 #ifdef FLUSH
-      workspace.update();
+      SDL_RenderPresent(renderer);
 #endif
     }
   }
 }
 
-void render_lines(const workspace_t& workspace, mode_type mode)
+void render_lines(SDL_Renderer *renderer, status_t status)
 {
+  SDL_RenderDrawPoint(renderer, WIDTH / 2, HEIGHT / 2);
+
   bool ok = true;
   int fib = 1, prev_fib = 0;
-  int width = workspace.w_size();
-  int height = workspace.h_size();
-  int prev_x, new_x = prev_x = width / 2,
-      prev_y, new_y = prev_y = height / 2;
-  bool gold = (mode == GOLD);
+  int new_x = WIDTH / 2, new_y = HEIGHT / 2,
+      prev_x = WIDTH / 2, prev_y = HEIGHT / 2;
+  bool gold = (status == GOLD);
 
   while(ok)
   {
-    workspace.draw_line(prev_x, prev_y, new_x, new_y);
+    draw_line(renderer, prev_x, prev_y, new_x, new_y);
+#ifdef FLUSH
+    SDL_RenderPresent(renderer);
+#endif
 
     if(gold)
     {
@@ -246,100 +227,164 @@ void render_lines(const workspace_t& workspace, mode_type mode)
 
     i %= 4;
 
-    if(((new_x < 0) || (new_x > width)) || ((new_y < 0) || (new_y > height)))
+    if(((new_x < 0) || (new_x > WIDTH)) || ((new_y < 0) || (new_y > HEIGHT)))
     {
       if(new_x < 0)
       {
-        new_y = new_y + new_x * (new_y - prev_y) /
-          static_cast<double>(new_x - prev_x);
+        new_y = new_y + new_x * (new_y - prev_y) / (double) (new_x - prev_x);
         new_x = 0;
       }
-      if(new_x > width)
+      if(new_x > WIDTH)
       {
-        new_y = new_y - (new_x - width) * (new_y - prev_y) /
-          static_cast<double>(new_x - prev_x);
-        new_x = width;
+        new_y = new_y - (new_x - WIDTH) * (new_y - prev_y) / (double) (new_x - prev_x);
+        new_x = WIDTH;
       }
       if(new_y < 0)
       {
-        new_x = new_x + new_y * (new_x - prev_x) /
-          static_cast<double>(new_y - prev_y);
+        new_x = new_x + new_y * (new_x - prev_x) / (double) (new_y - prev_y);
         new_y = 0;
       }
-      if(new_y > height)
+      if(new_y > HEIGHT)
       {
-        new_x = new_x - (new_y - height) * (new_x - prev_x) /
-          static_cast<double>(new_y - prev_y);
-        new_y = height;
+        new_x = new_x - (new_y - HEIGHT) * (new_x - prev_x) / (double) (new_y - prev_y);
+        new_y = HEIGHT;
       }
 
-      workspace.draw_line(prev_x, prev_y, new_x, new_y);
+      draw_line(renderer, prev_x, prev_y, new_x, new_y);
 
       ok = false;
     }
   }
 }
 
-void render_triangles(const workspace_t& workspace)
+void render_triangles(SDL_Renderer *renderer)
 {
+  const size_t w = WIDTH;
+  const size_t h = HEIGHT;
+  double *zbuf = new double[w * h];
+  for(size_t i = 0; i < w * h; ++i)
+    zbuf[i] = -std::numeric_limits<double>::max();
+
   vec3i v1(100, 400, -10);
   vec3i v2(700, 250, -1);
   vec3i v3(700, 550, -1);
-  workspace.set_draw_color(0xff, 0x00, 0x00);
-  triangle<int, 3> t1(v1, v2, v3);
-  workspace.draw_triangle(t1);
+  SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+  draw_triangle(renderer, v1, v2, v3, zbuf, w, h);
   v1 = vec3i(300, 100, -5);
   v2 = vec3i(300, 700, -5);
   v3 = vec3i(525, 400, -1);
-  workspace.set_draw_color(0x00, 0xff, 0x00);
-  triangle<int, 3> t2(v1, v2, v3);
-  workspace.draw_triangle(t2);
+  SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+  draw_triangle(renderer, v1, v2, v3, zbuf, w, h);
   v1 = vec3i(600, 50, -5);
   v2 = vec3i(600, 750, -5);
   v3 = vec3i(475, 400, -1);
-  workspace.set_draw_color(0x00, 0x00, 0xff);
-  triangle<int, 3> t3(v1, v2, v3);
-  workspace.draw_triangle(t3);
+  SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+  draw_triangle(renderer, v1, v2, v3, zbuf, w, h);
+  delete [] zbuf;
 }
-
-void main_init(int argc, char **argv, mode_type *mode, workspace_t **workspace);
 
 int main(int argc, char **argv)
 {
-  mode_type mode = EMPTY;
-  workspace_t *workspace = nullptr;
-  main_init(argc, argv, &mode, &workspace);
+  status_t status;
+  obj_model *model = NULL;
+  if(argc == 1)
+  {
+    std::cerr << "argc == 1" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  if(argc == 2)  
+  {
+    if(strcmp(argv[1], "-ng") == 0)
+    {
+      status = NOT_GOLD;
+    }
+    else if(strcmp(argv[1], "-g") == 0)
+    {
+      status = GOLD;
+    }
+    else if(strcmp(argv[1], "-t") == 0)
+    {
+      status = TRIANGLE;
+    }
+    else
+    {
+      std::cerr << "unknown arg" << std::endl;
+      exit(EXIT_FAILURE);
+    }
+  }
+  if(argc == 3)
+  {
+    if(strcmp(argv[1], "-wire") == 0)
+    {
+      status = WIREFRAME;
+    }
+    else if(strcmp(argv[1], "-rand") == 0)
+    {
+      status = RAND;
+    }
+    else if(strcmp(argv[1], "-rast") == 0)
+    {
+      status = RAST;
+    }
+    else if(strcmp(argv[1], "-remov") == 0)
+    {
+      status = REMOV;
+    }
+    else if(strcmp(argv[1], "-color") == 0)
+    {
+      status = COLOR;
+    }
+    else
+    {
+      std::cerr << "unknown args" << std::endl;
+      exit(EXIT_FAILURE);
+    }
+    model = new obj_model(argv[2]);
+  }
+  if(argc > 4)
+  {
+    std::cerr << "too many args" << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
-  workspace->set_draw_color(0xff, 0xff, 0xff);
+  SDL_Window *window;
+  SDL_Renderer *renderer;
 
-  switch(mode)
+  SDL_Init(SDL_INIT_VIDEO);
+  SDL_CreateWindowAndRenderer(WIDTH, HEIGHT, 0, &window, &renderer);
+
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+  SDL_RenderClear(renderer);
+  SDL_RenderPresent(renderer);
+
+  SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+
+  switch(status)
   {
     case WIREFRAME:
-      render_wireframe(*workspace);
+      render_wireframe(renderer, model);
       break;
     case RAND:
-      render_randcolor(*workspace);
+      render_randcolor(renderer, model);
       break;
     case RAST:
-      render_rasterisator(*workspace);
+      render_rasterisator(renderer, model);
       break;
     case REMOV:
-      render_removal_rasterisator(*workspace);
+      render_removal_rasterisator(renderer, model);
       break;
     case COLOR:
-      render_color_removal(*workspace);
+      render_color_removal(renderer, model);
       break;
     case TRIANGLE:
-      render_triangles(*workspace);
-      break;
-    case EMPTY:
+      render_triangles(renderer);
       break;
     default:
-      render_lines(*workspace, mode);
+      render_lines(renderer, status);
       break;
   }
 
-  workspace->update();
+  SDL_RenderPresent(renderer);
 
   SDL_Event event;
   for(;;)
@@ -349,159 +394,10 @@ int main(int argc, char **argv)
       break;
   }
 
+  SDL_DestroyRenderer(renderer);
+  SDL_DestroyWindow(window);
+  SDL_Quit();
+
   return EXIT_SUCCESS;
-}
-
-arg_status_t arg_parser(const char *argv)
-{
-  arg_status_t result;
-  if(strcmp(argv, "-ng") == 0)
-  {
-    result.info = NOT_GOLD;
-    result.arg = WITHOUT_FILE;
-  }
-  else if(strcmp(argv, "-g") == 0)
-  {
-    result.info = GOLD;
-    result.arg = WITHOUT_FILE;
-  }
-  else if(strcmp(argv, "-t") == 0)
-  {
-    result.info = TRIANGLE;
-    result.arg = WITHOUT_FILE;
-  }
-  else if(strcmp(argv, "-wire") == 0)
-  {
-    result.info = WIREFRAME;
-    result.arg = WITH_FILE;
-  }
-  else if(strcmp(argv, "-rand") == 0)
-  {
-    result.info = RAND;
-    result.arg = WITH_FILE;
-  }
-  else if(strcmp(argv, "-rast") == 0)
-  {
-    result.info = RAST;
-    result.arg = WITH_FILE;
-  }
-  else if(strcmp(argv, "-remov") == 0)
-  {
-    result.info = REMOV;
-    result.arg = WITH_FILE;
-  }
-  else if(strcmp(argv, "-color") == 0)
-  {
-    result.info = COLOR;
-    result.arg = WITH_FILE;
-  }
-  else if(strcmp(argv, "-size=") > 0)
-  {
-    result.arg = SIZE;
-    int size = strtol(argv + 6, nullptr, 10);
-    result.info = static_cast<size_t>(size);
-  }
-  else
-  {
-    result.arg = UNKNOWN;
-    result.info = EMPTY;
-  }
-  return result;
-}
-
-void main_init(int argc, char **argv, mode_type *mode, workspace_t **workspace)
-{
-  if(argc == 1)
-  {
-    std::cerr << "Too few args!" << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  size_t size = 0;
-  std::string filename;
-
-  for(int i = 1; i < argc; ++i)
-  {
-    if(argv[i][0] == '-')
-    {
-      arg_status_t arg_status = arg_parser(argv[i]);
-
-      if(arg_status.arg == SIZE)
-      {
-        size = std::get<size_t>(arg_status.info);
-      }
-
-      if(arg_status.arg == UNKNOWN)
-      {
-        std::cerr << "Unknown argument!" << std::endl;
-        exit(EXIT_FAILURE);
-      }
-
-      if(arg_status.arg == WITHOUT_FILE)
-      {
-        if(*mode == EMPTY)
-        {
-          *mode = std::get<mode_type>(arg_status.info);
-        }
-        else
-        {
-          std::cerr << "Can't run with 2 mods" << std::endl;
-        }
-      }
-
-      if(arg_status.arg == WITH_FILE)
-      {
-        if((*mode == EMPTY) && ((argc - i) > 0))
-        {
-          *mode = std::get<mode_type>(arg_status.info);
-          filename = argv[++i];
-        }
-        else
-        {
-          std::cerr << "Can't run with 2 mods" << std::endl;
-        }
-      }
-    }
-    else
-    {
-      std::cerr << "Unknown argument!" << std::endl;
-      exit(EXIT_FAILURE);
-    }
-  }
-
-  if(filename.size())
-  {
-    try
-    {
-      if(size != 0)
-        *workspace = new workspace_t(filename, size, size);
-      else
-        *workspace = new workspace_t(filename);
-    }
-    catch(const sdl_error& e)
-    {
-      std::cerr << "Can't create workspace : " << e.what() << std::endl;
-      exit(EXIT_FAILURE);
-    }
-  }
-  else
-  {
-    try
-    {
-      if(size != 0)
-        *workspace = new workspace_t(size, size);
-      else
-        *workspace = new workspace_t();
-    }
-    catch(const sdl_error& e)
-    {
-      std::cerr << "Can't create workspace : " << e.what() << std::endl;
-    }
-  }
-
-  if(workspace == nullptr)
-  {
-    exit(EXIT_FAILURE);
-  }
 }
 
