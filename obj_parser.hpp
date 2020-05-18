@@ -125,10 +125,14 @@ private:
   std::vector<vec2d> texture_verts;
   tga_image diffuse;
 public:
-  obj_model(std::string filename)
+  obj_model(const char* const file)
   {
+    if (file == nullptr)
+        return;
+    std::string filename = file;
+    
     std::ifstream ifs;
-    ifs.open(filename, std::ifstream::in);
+    ifs.open( filename, std::ifstream::in);
 
     if(ifs.fail())
       throw std::ios_base::failure("Can't open model obj file");

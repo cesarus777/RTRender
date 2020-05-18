@@ -16,7 +16,7 @@ add_library(RTRender-src OBJECT
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")  
     # using G++
     message( STATUS "GNU compiler detected, adding compile flags")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wextra -Wpedantic -Werror -g")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++17 -Wall -Wextra -Wpedantic -Werror -g")
 
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")

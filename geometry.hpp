@@ -68,6 +68,7 @@ template <typename T> struct vec3
   }
 };
 
+
 template <typename T> struct vec2
 {
   T x, y;
@@ -111,8 +112,59 @@ template <typename T> struct vec2
   }
 };
 
+
+
+
+template <typename T> struct triangle
+{
+    vec3<T> v1, v2, v3;
+    
+    triangle( ) 
+    : v1()
+    , v2()
+    , v3()
+    {}
+    
+    triangle( const vec3<T>& _v1, const vec3<T>& _v2, const vec3<T>& _v3) 
+    : v1(_v1)
+    , v2(_v2)
+    , v3(_v3)
+    {}
+    
+    const vec3<T>& operator[](size_t i) const
+    {
+        switch(i)
+        {
+            case 0 : return v1;
+            case 1 : return v2;
+            case 2 : return v3;
+        }
+        
+        throw std::runtime_error("triangle out of range");
+    }
+    
+    
+    vec3<T>& operator[](size_t i)
+    {
+        switch(i)
+        {
+            case 0 : return v1;
+            case 1 : return v2;
+            case 2 : return v3;
+        }
+        
+        throw std::runtime_error("triangle out of range");
+    } 
+};
+
+
 typedef vec2<double> vec2d;
 typedef vec2<int>    vec2i;
 typedef vec3<double> vec3d;
 typedef vec3<int>    vec3i;
+
+using   triangleD = triangle<double>;
+using   triangleI = triangle<int>;
+//using   tuple_triangleD_double_bool = std::tuple< triangleD, double, bool>;
+using   tuple_triangleI_double_bool = std::tuple< triangleI, double, bool>;
 

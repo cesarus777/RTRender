@@ -111,7 +111,6 @@ void RTR::Window::draw_triangle( vec3i v1, vec3i v2, vec3i v3)
         if (whole.x > compound.x)
             std::swap(whole, compound);
             
-            
         // needed for z buffer interpolation 
         double phi = (whole.x == compound.x) 
                                 ?   1.0
@@ -126,7 +125,7 @@ void RTR::Window::draw_triangle( vec3i v1, vec3i v2, vec3i v3)
                                 
             size_t i = x + y * WIN_WIDTH;
 
-            if (i < static_cast<size_t>(WIN_WIDTH * WIN_HEIGHT))
+            if ((0 < x) and (x < WIN_WIDTH) and (0 < y) and (y < WIN_HEIGHT))
             {
                 if (zbuf_min > z) zbuf_min = z;
                 if (zbuf_max < z) zbuf_max = z;
@@ -154,6 +153,9 @@ void RTR::Window::draw_triangle(    vec3i v1, vec3i v2, vec3i v3,
                                     vec2i t1, vec2i t2, vec2i t3, 
                                     double intensity)
 {
+
+                             
+
     if(v1.y > v2.y)
     {
         std::swap(v1, v2);
@@ -211,6 +213,7 @@ void RTR::Window::draw_triangle(    vec3i v1, vec3i v2, vec3i v3,
            ? 1.0 :  (t_compound[1] - t_whole[1]) /
                     (double) (compound.x - whole.x);
                     
+
         for(int x = whole.x; x <= compound.x; ++x)
         {
             zbuf_depth_t z = static_cast<zbuf_depth_t>(
@@ -227,17 +230,21 @@ void RTR::Window::draw_triangle(    vec3i v1, vec3i v2, vec3i v3,
                 if (zbuf_max < z) zbuf_max = z;
                 if (zbuf[i]  < z)
                 {
+
                     zbuf[i] = z;
                    
-                    SDL_Color clr = model->tv_clr( t_1, t_2);
+                    SDL_Color clr = model.tv_clr( t_1, t_2);
 
                     uint8_t r = clr.r * intensity;
                     uint8_t g = clr.g * intensity;
                     uint8_t b = clr.b * intensity;
                     uint8_t a = clr.a * intensity;
+
                     SDL_SetRenderDrawColor( renderer, r, g, b, a);
                         
                     SDL_RenderDrawPoint(renderer, x, y);
+
+
                 }
             }
         }
