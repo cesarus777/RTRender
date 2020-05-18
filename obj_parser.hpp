@@ -121,6 +121,8 @@ private:
   double min_x;
   double max_y;
   double min_y;
+  double max_z;
+  double min_z;
   std::vector<std::vector<vec3i>> faces;
   std::vector<vec2d> texture_verts;
   tga_image diffuse;
@@ -153,6 +155,10 @@ public:
           max_y = v[1];
         if(v[1] < min_y)
           min_y = v[1];
+        if(v[2] > max_z)
+          max_z = v[2];
+        if(v[2] < min_z)
+          min_z = v[2];
         vertices.push_back(v);
       }
       else if(str == "vt")
@@ -225,6 +231,8 @@ public:
 
   double xshift() const { return (max_x + min_x) / 2; }
   double yshift() const { return (max_y + min_y) / 2; }
+  double zshift() const { return (max_z + min_z) / 2; }
+
 
   double xborder() const { return (max_x - min_x) / 2; }
   double yborder() const { return (max_y - min_y) / 2; }

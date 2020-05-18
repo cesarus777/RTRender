@@ -241,6 +241,46 @@
                     case SDL_SCANCODE_O :
                                     OBJ_SCALE /= OBJ_ZOOM_MULTIPLIER;
                                     break;
+                                   
+                                   
+                                   
+                                    
+                    case SDL_SCANCODE_5 :
+                                    orientation = 
+                                        orientation * X_ROT_SPEED;
+                                    break;
+                                    
+                    case SDL_SCANCODE_6 :
+                                    orientation = 
+                                        orientation * 
+                                            X_ROT_SPEED.get_reverse();
+                                    break;
+                                    
+                    case SDL_SCANCODE_1 :
+                                    orientation = 
+                                        orientation * Y_ROT_SPEED;
+                                    break;
+                                    
+                    case SDL_SCANCODE_2 :
+                                    orientation = 
+                                        orientation * 
+                                            Y_ROT_SPEED.get_reverse();
+                                    break;
+                                    
+                    case SDL_SCANCODE_4 :
+                                    orientation = 
+                                        orientation * Z_ROT_SPEED;
+                                    break;
+                                    
+                    case SDL_SCANCODE_3 :
+                                    orientation = 
+                                        orientation * 
+                                            Z_ROT_SPEED.get_reverse();
+                                    break;
+                                    
+                                    
+                                    
+                                    
                                     
                     case SDL_SCANCODE_Z : 
                                     if (mode != ZBUF)
@@ -308,6 +348,8 @@
                 case SDL_KEYUP :
                     H_SHIFT += Y_SPEED;
                     W_SHIFT += X_SPEED;
+                    
+                    
                     draw_target( mode);
                     switch( event.key.keysym.scancode)
                     {
@@ -327,6 +369,8 @@
                                         if (X_SPEED > 0) X_SPEED = 0;
                                         break;
 
+                                         
+                                    
 
                         default : break;
                     }
@@ -435,6 +479,7 @@ void RTR::Window::render_mode_threaded()
                 double              intensity   = std::get<1>( retval[j]);
                 bool                isOnScreen  = std::get<2>( retval[j]);
 
+                intensity *= intensity;
                 if ( isOnScreen ) try
                 {
                     switch( mode)
@@ -545,21 +590,25 @@ void RTR::Window::render_mode_threaded()
 }
 
 
+  //  std::cout<<"z_"<<z<<std::endl;
+
+
 
 // Thread routine:
 // using macro because of the need of founding xmin, xmax, ...
-#define project_vertice() \
+#define project_vertice(/* vec3d world[j] */)\
 {                                                                   \
+    orientation.rotate( world[j]);\
     x = ( model.xshift() - world[j].x + W_SHIFT) * OBJ_SCALE        \
                                                 + WIN_WIDTH / 2.0;  \
                                                                     \
     y = ( model.yshift() - world[j].y - H_SHIFT) * OBJ_SCALE        \
                                                 + WIN_HEIGHT / 2.0; \
                                                                     \
-    z = world[j].z * ZBUF_SCALE;                                    \
+    z = (  model.zshift() + world[j].z - D_SHIFT)  * ZBUF_SCALE;    \
                                                                     \
 }
-
+ 
 
 
 // (supports parallelization)
@@ -585,7 +634,7 @@ void RTR::Window::project_face( tuple_triangleI_double_bool*& info,
     for(size_t j = 0; j < 3; ++j)
     {
         world[j] = model.vertice(face[j]);
-        int x, y, z;
+        int     x, y, z;
 
         project_vertice();       // "fills" x, y, z;
 

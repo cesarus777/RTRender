@@ -215,10 +215,10 @@ void RTR::Window::draw_triangle(    vec3i v1, vec3i v2, vec3i v3,
         for(int x = whole.x; x <= compound.x; ++x)
         {
             zbuf_depth_t z = static_cast<zbuf_depth_t>(
-                                whole.z + phi1 * (x - whole.x));
+                                whole.z + phi1 * (int) (x - whole.x));
 
-            int t_1 = t_whole[0] + phi2 * (x - whole.x);
-            int t_2 = t_whole[1] + phi3 * (x - whole.x);
+            int t_1 = t_whole[0] + phi2 * (int) (x - whole.x);
+            int t_2 = t_whole[1] + phi3 * (int) (x - whole.x);
 
             size_t i = x + y * WIN_WIDTH;
 
@@ -228,8 +228,8 @@ void RTR::Window::draw_triangle(    vec3i v1, vec3i v2, vec3i v3,
                 if (zbuf_max < z) zbuf_max = z;
                 if (zbuf[i]  < z)
                 {
-
                     zbuf[i] = z;
+                    
                     SDL_Color clr = model.tv_clr( t_1, t_2);
 
                     uint8_t r = clr.r * intensity;

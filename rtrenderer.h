@@ -34,6 +34,7 @@ namespace RTR
 
     const double W_SHIFT_DEFAULT        = 0.;  // determines .obj position
     const double H_SHIFT_DEFAULT        = 0.;   // on the screen
+    const double D_SHIFT_DEFAULT        = 0.;   // 
     const double OBJ_SCALE_DEFAULT      = 400.;  // determines size of the model on the screen
     const double OBJ_ZOOM_MULTIPLIER    = 2.;
 
@@ -42,17 +43,22 @@ namespace RTR
 
 
     using zbuf_depth_t              = int16_t;
-    const int ZBUF_SCALE            = 1000;  //
+    const int ZBUF_SCALE            = 100;  //
 
 
-
+    const quaterniond ORIENTATION_DEFAULT( 1, 0, 0, 0);
+    const quaterniond X_ROT_SPEED_DEFAULT( 0.98480775301, 0.17364817766, 0, 0);
+    const quaterniond Y_ROT_SPEED_DEFAULT( 0.98480775301, 0, 0.17364817766, 0);
+    const quaterniond Z_ROT_SPEED_DEFAULT( 0.98480775301, 0, 0, 0.17364817766);
+    
+    
     const char* const usage_info =
     "Usage: [-s <FIGURE>] [-o <FILE>] [-m <MODE>]\n";
 
 
 
     /* Parallelism */
-    const size_t N_MACHINES = 1;
+    const size_t N_MACHINES = 100;
 
 
 
@@ -82,7 +88,12 @@ namespace RTR
 
         double W_SHIFT    = W_SHIFT_DEFAULT;   // determine .obj
         double H_SHIFT    = H_SHIFT_DEFAULT;   // position
+        double D_SHIFT    = D_SHIFT_DEFAULT;   // position
         double OBJ_SCALE  = OBJ_SCALE_DEFAULT; // on the screen
+        
+        quaterniond  orientation = ORIENTATION_DEFAULT;
+
+
 
 
         zbuf_depth_t*   zbuf     = nullptr;
@@ -98,6 +109,10 @@ namespace RTR
 
         double Y_SPEED    = 0;  //
         double X_SPEED    = 0;  //
+        
+        quaterniond X_ROT_SPEED = X_ROT_SPEED_DEFAULT;
+        quaterniond Y_ROT_SPEED = Y_ROT_SPEED_DEFAULT;
+        quaterniond Z_ROT_SPEED = Z_ROT_SPEED_DEFAULT;
 
 
         std::thread* pool = nullptr;
