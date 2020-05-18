@@ -31,22 +31,25 @@ namespace RTR
     const uint8_t G_BGR = 0;
     const uint8_t B_BGR = 0;
     const uint8_t A_BGR = 255;
+    
+    const double PERSPECTIVE_FOCUS = -0.5;
 
     const double W_SHIFT_DEFAULT        = 0.;  // determines .obj position
     const double H_SHIFT_DEFAULT        = 0.;   // on the screen
-    const double D_SHIFT_DEFAULT        = 0.;   // 
+    const double D_SHIFT_DEFAULT        = -0.5;   // 
     const double OBJ_SCALE_DEFAULT      = 400.;  // determines size of the model on the screen
-    const double OBJ_ZOOM_MULTIPLIER    = 2.;
 
     const double Y_SHIFT_SPEED_DEFAULT    = 0.15;  // WASD speed
     const double X_SHIFT_SPEED_DEFAULT    = 0.15;  //
+    const double Z_SHIFT_SPEED_DEFAULT    = 0.15;  //
 
 
-    using zbuf_depth_t              = int16_t;
-    const int ZBUF_SCALE            = 100;  //
+    using zbuf_depth_t              = int32_t;
+    const int ZBUF_SCALE            = 10;  //
 
 
-    const quaterniond ORIENTATION_DEFAULT( 1, 0, 0, 0);
+    const quaterniond ORIENTATION_DEFAULT( 0, 0, 1, 0);
+    // rotation to a = 10 * 2 degrees;
     const quaterniond X_ROT_SPEED_DEFAULT( 0.98480775301, 0.17364817766, 0, 0);
     const quaterniond Y_ROT_SPEED_DEFAULT( 0.98480775301, 0, 0.17364817766, 0);
     const quaterniond Z_ROT_SPEED_DEFAULT( 0.98480775301, 0, 0, 0.17364817766);
@@ -104,11 +107,12 @@ namespace RTR
 
         SDL_Renderer*   renderer = nullptr;
         SDL_Window*     window   = nullptr;
-        int         WIN_WIDTH   = WIN_WIDTH_DEFAULT;
-        int         WIN_HEIGHT  = WIN_HEIGHT_DEFAULT;
+        int         WIN_WIDTH    = WIN_WIDTH_DEFAULT;
+        int         WIN_HEIGHT   = WIN_HEIGHT_DEFAULT;
 
-        double Y_SPEED    = 0;  //
         double X_SPEED    = 0;  //
+        double Y_SPEED    = 0;  //
+        double Z_SPEED    = 0;  //
         
         quaterniond X_ROT_SPEED = X_ROT_SPEED_DEFAULT;
         quaterniond Y_ROT_SPEED = Y_ROT_SPEED_DEFAULT;
@@ -165,10 +169,6 @@ namespace RTR
             /* draw the model and wait for an event */
             void static_display();
             void xy_move_display();
-
-
-
-
 
     };
 

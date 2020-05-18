@@ -218,16 +218,17 @@
 
                 case SDL_KEYDOWN : switch( event.key.keysym.scancode)
                 {
+                    /* Translational motion */
                     case SDL_SCANCODE_W :
-                                    Y_SPEED =  Y_SHIFT_SPEED_DEFAULT;
+                                    Y_SPEED = -Y_SHIFT_SPEED_DEFAULT;
                                     break;
-
+                
                     case SDL_SCANCODE_A :
                                     X_SPEED = -X_SHIFT_SPEED_DEFAULT;
                                     break;
 
                     case SDL_SCANCODE_S :
-                                    Y_SPEED = -Y_SHIFT_SPEED_DEFAULT;
+                                    Y_SPEED =  Y_SHIFT_SPEED_DEFAULT;
                                     break;
 
                     case SDL_SCANCODE_D :
@@ -235,16 +236,16 @@
                                     break;
 
                     case SDL_SCANCODE_I :
-                                    OBJ_SCALE *= OBJ_ZOOM_MULTIPLIER;
+                                    Z_SPEED =  Z_SHIFT_SPEED_DEFAULT;
                                     break;
 
                     case SDL_SCANCODE_O :
-                                    OBJ_SCALE /= OBJ_ZOOM_MULTIPLIER;
+                                    Z_SPEED =  -Z_SHIFT_SPEED_DEFAULT;
                                     break;
                                    
                                    
                                    
-                                    
+                    /* Rotation: */          
                     case SDL_SCANCODE_5 :
                                     orientation = 
                                         orientation * X_ROT_SPEED;
@@ -281,7 +282,7 @@
                                     
                                     
                                     
-                                    
+                    /* Rendering mode selection: */            
                     case SDL_SCANCODE_Z : 
                                     if (mode != ZBUF)
                                     {
@@ -346,29 +347,38 @@
 
 
                 case SDL_KEYUP :
-                    H_SHIFT += Y_SPEED;
                     W_SHIFT += X_SPEED;
+                    H_SHIFT += Y_SPEED;
+                    D_SHIFT += Z_SPEED;
                     
                     
                     draw_target( mode);
                     switch( event.key.keysym.scancode)
                     {
                         case SDL_SCANCODE_W:
-                                        if (Y_SPEED > 0) Y_SPEED = 0;
+                                        if (Y_SPEED < 0) Y_SPEED = 0;
                                         break;
-
+                                        
                         case SDL_SCANCODE_A:
                                         if (X_SPEED < 0) X_SPEED = 0;
                                         break;
-
+                                        
                         case SDL_SCANCODE_S:
-                                        if (Y_SPEED < 0) Y_SPEED = 0;
+                                        if (Y_SPEED > 0) Y_SPEED = 0;
                                         break;
+                        
 
                         case SDL_SCANCODE_D:
                                         if (X_SPEED > 0) X_SPEED = 0;
                                         break;
+                                        
+                        case SDL_SCANCODE_I:
+                                        if (Z_SPEED > 0) Z_SPEED = 0;
+                                        break;
 
+                        case SDL_SCANCODE_O:
+                                        if (Z_SPEED < 0) Z_SPEED = 0;
+                                        break;
                                          
                                     
 
@@ -597,15 +607,27 @@ void RTR::Window::render_mode_threaded()
 // Thread routine:
 // using macro because of the need of founding xmin, xmax, ...
 #define project_vertice(/* vec3d world[j] */)\
-{                                                                   \
+{               \
+    /* Rotate: */                                                        \
     orientation.rotate( world[j]);\
-    x = ( model.xshift() - world[j].x + W_SHIFT) * OBJ_SCALE        \
+                                                                        \
+    /* Shift: */                                                \
+    world[j].x = model.xshift() - world[j].x + W_SHIFT;         \
+    world[j].y = model.yshift() - world[j].y + H_SHIFT;         \
+    world[j].z = model.zshift() - world[j].z + D_SHIFT;         \
+                                                                    \
+    /* Perspective: */                                      \
+    world[j].x /= PERSPECTIVE_FOCUS * world[j].z + 1;           \
+    world[j].y /= PERSPECTIVE_FOCUS * world[j].z + 1;       \
+    world[j].z /= PERSPECTIVE_FOCUS * world[j].z + 1;           \
+                                                                            \
+    x = ( world[j].x) * OBJ_SCALE        \
                                                 + WIN_WIDTH / 2.0;  \
                                                                     \
-    y = ( model.yshift() - world[j].y - H_SHIFT) * OBJ_SCALE        \
+    y = ( world[j].y) * OBJ_SCALE        \
                                                 + WIN_HEIGHT / 2.0; \
                                                                     \
-    z = (  model.zshift() + world[j].z - D_SHIFT)  * ZBUF_SCALE;    \
+    z = (  world[j].z) * OBJ_SCALE  * ZBUF_SCALE;    \
                                                                     \
 }
  
