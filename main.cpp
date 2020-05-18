@@ -8,7 +8,7 @@ int main(int argc, char **argv)
     {
         char* filename = RTR::Window::argv_parse1( argc, argv);
         RTR::Window r( argc, argv, filename);
-        r.xy_move_display();   
+        r.do_task();
     }
     
     catch(std::exception& e)

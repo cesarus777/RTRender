@@ -185,6 +185,34 @@
 ///////////////////////////////////////////////////////////////////////////
 // Supported window modes:
 //
+
+    void RTR::Window::do_task()
+    {
+        switch( mode)
+        {
+            case N_RM_RST: 
+            case WIREFRAME:
+            case ZBUF:
+            case RAST:
+            case RAND:
+            case TEXTURE:   
+                            dynamic_display();
+                            break;
+                            
+                            
+            case TRIANGLE:  
+            case GOLD:      
+            case NOT_GOLD:  static_display();
+                            break;
+
+
+            default:        throw bad_mode();
+        }
+        
+        return;
+    }
+    
+    
     void RTR::Window::static_display()
     {
             draw_target (mode);
@@ -201,8 +229,11 @@
             }
 
     }
+    
+    
+    
 
-    void RTR::Window::xy_move_display()
+    void RTR::Window::dynamic_display()
     {
         SDL_Event event;
 
@@ -616,18 +647,22 @@ void RTR::Window::render_mode_threaded()
     world[j].y = model.yshift() - world[j].y + H_SHIFT;         \
     world[j].z = model.zshift() - world[j].z + D_SHIFT;         \
                                                                     \
-    /* Perspective: */                                      \
-    world[j].x /= PERSPECTIVE_FOCUS * world[j].z + 1;           \
-    world[j].y /= PERSPECTIVE_FOCUS * world[j].z + 1;       \
-    world[j].z /= PERSPECTIVE_FOCUS * world[j].z + 1;           \
-                                                                            \
-    x = ( world[j].x) * OBJ_SCALE        \
+    /* Perspective: */                                              \
+    double div = PERSPECTIVE_FOCUS * world[j].z + 1;                \
+    if (div < 0.1)                                                  \
+        div = 0.1;                                                  \
+                                                                    \
+    world[j].x /= div;                                              \
+    world[j].y /= div;                                              \
+    world[j].z /= div;                                              \
+                                                                    \
+    x = ( world[j].x) * OBJ_SCALE                                   \
                                                 + WIN_WIDTH / 2.0;  \
                                                                     \
-    y = ( world[j].y) * OBJ_SCALE        \
+    y = ( world[j].y) * OBJ_SCALE                                   \
                                                 + WIN_HEIGHT / 2.0; \
                                                                     \
-    z = (  world[j].z) * OBJ_SCALE  * ZBUF_SCALE;    \
+    z = (  world[j].z) * OBJ_SCALE  * ZBUF_SCALE;                   \
                                                                     \
 }
  

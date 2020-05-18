@@ -167,9 +167,9 @@ namespace RTR
      static void  show_usage();
 
             /* draw the model and wait for an event */
+            void do_task();
             void static_display();
-            void xy_move_display();
-
+            void dynamic_display();
     };
 
 
