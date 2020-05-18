@@ -111,11 +111,12 @@ void RTR::Window::draw_triangle( vec3i v1, vec3i v2, vec3i v3)
         if (whole.x > compound.x)
             std::swap(whole, compound);
             
+
         // needed for z buffer interpolation 
-        double phi = (whole.x == compound.x) 
-                                ?   1.0
-                                :   (compound.z - whole.z) /
-                                    (double) (compound.x - whole.x);
+        double phi;
+        if (compound.x - whole.x)
+            phi = (compound.z - whole.z) /
+                                (double) (compound.x - whole.x);
 
  
         for (int x = (int) whole.x; x <= (int) compound.x; ++x)
@@ -153,9 +154,6 @@ void RTR::Window::draw_triangle(    vec3i v1, vec3i v2, vec3i v3,
                                     vec2i t1, vec2i t2, vec2i t3, 
                                     double intensity)
 {
-
-                             
-
     if(v1.y > v2.y)
     {
         std::swap(v1, v2);
@@ -200,19 +198,19 @@ void RTR::Window::draw_triangle(    vec3i v1, vec3i v2, vec3i v3,
 
 
 
-
-        double phi1 = (whole.x == compound.x)
-           ? 1.0 :  (compound.z - whole.z) / 
-                    (double) (compound.x - whole.x);
-                    
-        double phi2 = (whole.x == compound.x)
-           ? 1.0 :  (t_compound[0] - t_whole[0]) /
-                    (double) (compound.x - whole.x);
-                    
-        double phi3 = (whole.x == compound.x)
-           ? 1.0 :  (t_compound[1] - t_whole[1]) /
-                    (double) (compound.x - whole.x);
-                    
+        double phi1, phi2, phi3;
+        // avoiding deletion on zero after (double) cast
+        if ((compound.x - whole.x) >= 1)
+        {
+                phi1 = (compound.z - whole.z) / 
+                                (double) (compound.x - whole.x);
+                            
+                phi2 = (t_compound[0] - t_whole[0]) /
+                                (double) (compound.x - whole.x);
+                            
+                phi3 = (t_compound[1] - t_whole[1]) /
+                                (double) (compound.x - whole.x);
+        }
 
         for(int x = whole.x; x <= compound.x; ++x)
         {
@@ -232,7 +230,6 @@ void RTR::Window::draw_triangle(    vec3i v1, vec3i v2, vec3i v3,
                 {
 
                     zbuf[i] = z;
-                   
                     SDL_Color clr = model.tv_clr( t_1, t_2);
 
                     uint8_t r = clr.r * intensity;
