@@ -4,28 +4,22 @@
 
 int main(int argc, char **argv)
 {
-
     try
     {
- 
-        RTR::Window r( argc, argv);
-//        std::cout << "2 " << std::endl;
-        r.static_display();
-        
-  //      std::cout << " 3" << std::endl;
+        char* filename = RTR::Window::argv_parse1( argc, argv);
+        RTR::Window r( argc, argv, filename);
+        r.do_task();
     }
+    
     catch(std::exception& e)
     {
-        std::cout << e.what() << std::endl;
+        std::cout<< "\nException catched in main:\t" << e.what() << std::endl;
     }
     catch(...)
     {
         std::cout << "unknown exception" << std::endl;
     }
-  
-
-
-
-  return EXIT_SUCCESS;
+ 
+    return EXIT_SUCCESS;
 }
 
