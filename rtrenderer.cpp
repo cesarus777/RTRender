@@ -620,7 +620,9 @@ void RTR::Window::render_mode_threaded()
                                     "draw_triangle() failed");
                 }
             }
+            
         }
+
     }
 
     if ( mode == ZBUF)
@@ -654,7 +656,6 @@ void RTR::Window::render_mode_threaded()
                                                                     \
     world[j].x /= div;                                              \
     world[j].y /= div;                                              \
-    world[j].z /= div;                                              \
                                                                     \
     x = ( world[j].x) * OBJ_SCALE                                   \
                                                 + WIN_WIDTH / 2.0;  \
@@ -662,7 +663,15 @@ void RTR::Window::render_mode_threaded()
     y = ( world[j].y) * OBJ_SCALE                                   \
                                                 + WIN_HEIGHT / 2.0; \
                                                                     \
-    z = (  world[j].z) * OBJ_SCALE  * ZBUF_SCALE;                   \
+    double tempz =  (  world[j].z)  * ZBUF_SCALE;                   \
+    if ( tempz >= std::numeric_limits<zbuf_depth_t>::max() )        \
+        z = std::numeric_limits<zbuf_depth_t>::max();               \
+                                                                    \
+    if ( tempz <= std::numeric_limits<zbuf_depth_t>::min() )        \
+        z = std::numeric_limits<zbuf_depth_t>::min();               \
+                                                                    \
+    else                                                            \
+        z = tempz;                                                  \
                                                                     \
 }
  
@@ -879,19 +888,41 @@ void RTR::Window::zbuf_clear()
 void RTR::Window::display_zbuf()
 {
     if (zbuf != nullptr )
+    {
+        long long max_distance  = zbuf_max - zbuf_min;
         for (int y = 0; y < WIN_HEIGHT; y++)
             for (int x = 0; x < WIN_WIDTH; x++)
             {
-                long max_dist = zbuf_max - zbuf_min;
 
-                int color =  (255 * (zbuf[x + y * WIN_WIDTH] - zbuf_min - max_dist / 2))
-                                     / max_dist * 2;
-                if (color < 0)
-                    color = 0;
+                int color;
+                switch( zbuf[x + y * WIN_WIDTH])
+                {
+                    case std::numeric_limits<zbuf_depth_t>::min() : 
+                        color = 0;
+                        break;
+                        
+                    case std::numeric_limits<zbuf_depth_t>::max() :
+                        color = 255;
+                        break;
+                        
+                    default :
+                    {
+                        long long distance = ( ((long long)zbuf[x + y * WIN_WIDTH]) - zbuf_min);
+                        double k = 255 / (double) max_distance;
+
+                        color =  distance * k;
+                        break;
+                    }
+                }
+                             
+            
+                assert(color <= 255);
 
                 SDL_SetRenderDrawColor( renderer, color, color, color, color);
                 SDL_RenderDrawPoint( renderer, x, y);
             }
+    }
+    
     return;
 }
 

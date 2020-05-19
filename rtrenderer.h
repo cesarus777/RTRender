@@ -44,8 +44,8 @@ namespace RTR
     const double Z_SHIFT_SPEED_DEFAULT    = 0.15;  //
 
 
-    using zbuf_depth_t              = int32_t;
-    const int ZBUF_SCALE            = 10;  //
+    using zbuf_depth_t              = int8_t; // 16 or 8 bits 
+    const int ZBUF_SCALE            = 50;  
 
 
     const quaterniond ORIENTATION_DEFAULT( 0, 0, 1, 0);
@@ -61,7 +61,7 @@ namespace RTR
 
 
     /* Parallelism */
-    const size_t N_MACHINES = 100;
+    const size_t N_MACHINES = 5;
 
 
 
