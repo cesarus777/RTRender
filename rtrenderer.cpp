@@ -1,4 +1,4 @@
-#include "rtrenderer.h"
+#include "rtrenderer.hpp"
 
 
 // Basic methods:

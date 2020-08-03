@@ -1,5 +1,5 @@
 //#include "primitives.hpp"
-#include "rtrenderer.h"
+#include "rtrenderer.hpp"
 void RTR::Window::draw_line( int x1, int y1, int x2, int y2)
 {
     #ifdef USING_SDL
