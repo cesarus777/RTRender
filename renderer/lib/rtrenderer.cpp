@@ -489,7 +489,7 @@ void RTR::Window::render_mode_threaded()
     uint8_t alpha   = 0;
 
     size_t nfaces = model.nfaces();
-    auto retval = new tuple_triangleI_double_bool[N_MACHINES];
+    auto retval = new tuple_triangle3i_double_bool[N_MACHINES];
 
     for (size_t i = 0; i < model.nfaces(); i += N_MACHINES)
     {
@@ -516,7 +516,7 @@ void RTR::Window::render_mode_threaded()
             {
                 pool[j].join();
 
-                const triangleI&    tr          = std::get<0>( retval[j]);
+                const triangle3i&    tr          = std::get<0>( retval[j]);
                 double              intensity   = std::get<1>( retval[j]);
                 bool                isOnScreen  = std::get<2>( retval[j]);
 
@@ -678,7 +678,7 @@ void RTR::Window::render_mode_threaded()
 
 
 // (supports parallelization)
-void RTR::Window::project_face( tuple_triangleI_double_bool*& info,
+void RTR::Window::project_face( tuple_triangle3i_double_bool*& info,
                                 size_t infoIDX,
                                 size_t i,
                                 const vec3d& light)
@@ -686,7 +686,7 @@ void RTR::Window::project_face( tuple_triangleI_double_bool*& info,
 
     auto face =  model.face(i);
 
-    triangleI projection;
+    triangle3i projection;
 
     bool    isOnScreen  = true;
     int     xmin        = WIN_WIDTH;

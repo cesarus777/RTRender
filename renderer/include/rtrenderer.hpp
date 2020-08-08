@@ -148,7 +148,7 @@ namespace RTR
                                 double intensity);
 
 
-            void project_face(  tuple_triangleI_double_bool*& info,
+            void project_face(  tuple_triangle3i_double_bool*& info,
                                 size_t infoIDX,
                                 size_t facenum,
                                 const vec3d& light);
