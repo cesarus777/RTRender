@@ -255,20 +255,52 @@ struct triangle
 
   constexpr triangle() {}
 
-  constexpr triangle(const vec<T, 3>& v1,
-                     const vec<T, 3>& v2,
-                     const vec<T, 3>& v3) : verts{ v1, v2, v3 } {}
+  constexpr triangle(const vec<T, size>& v1,
+                     const vec<T, size>& v2,
+                     const vec<T, size>& v3) : verts{ v1, v2, v3 } {}
 
-  constexpr vec<T, 3>& operator[](size_t i)
+  constexpr vec<T, size>& operator[](size_t i)
   {
     return verts[i];
   }
 
-  constexpr const vec<T, 3>& operator[](size_t i) const
+  constexpr const vec<T, size>& operator[](size_t i) const
   {
     return verts[i];
   }
 };
+
+
+
+template <typename T>
+std::istream& operator>>(std::istream& is, vec<T, 2>& v)
+{
+  return is >> v[0] >> v[1];
+}
+
+template <typename T>
+std::istream& operator>>(std::istream& is, vec<T, 3>& v)
+{
+  return is >> v[0] >> v[1] >> v[2];
+}
+
+template <typename T>
+std::istream& operator>>(std::istream& is, quaternion<T>& v)
+{
+  return is >> v[0] >> v[1] >> v[2] >> v[3];
+}
+
+template <typename T>
+std::istream& operator>>(std::istream& is, triangle<T, 2>& t)
+{
+  return is >> t[0] >> t[1];
+}
+
+template <typename T>
+std::istream& operator>>(std::istream& is, triangle<T, 3>& t)
+{
+  return is >> t[0] >> t[1] >> t[2];
+}
 
 
 
