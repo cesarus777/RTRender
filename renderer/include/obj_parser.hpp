@@ -1,8 +1,10 @@
 #pragma once
 
-#include <fstream>
 #include <iostream>
+#include <filesystem>
+#include <fstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <SDL.h>
@@ -10,64 +12,62 @@
 
 #include "geometry.hpp"
 
+
+
 class tga_image
 {
 private:
   SDL_Surface *image = nullptr;
-public:
-  tga_image() : image(NULL) {}
-  tga_image(const char* filename)
-  {
-    SDL_RWops *rwop;
-    rwop = SDL_RWFromFile(filename, "rb");
 
-    if (rwop == nullptr)
-        throw no_file();
-        
-    image = IMG_LoadTGA_RW(rwop);
-    SDL_RWclose(rwop);
-    if(!image)
-      throw std::runtime_error("can't open " + std::string(filename));
+public:
+  tga_image() {}
+
+  tga_image(const std::filesystem::path &filename)
+  {
+    read_tga(filename);
   }
 
   ~tga_image()
   {
-    if(image)
+    if(image != nullptr)
       SDL_FreeSurface(image);
   }
 
-  size_t width() { return image->w; }
-  size_t height() { return image->h; }
+  inline size_t width() const noexcept { return image->w; }
+  inline size_t height() const noexcept { return image->h; }
 
-
-
-  void read_tga(const char* filename)
+  void read_tga(const std::filesystem::path &filename)
   {
+    if(image != nullptr)
+      SDL_FreeSurface(image);
+
     SDL_RWops *rwop;
-    rwop = SDL_RWFromFile(filename, "rb");
+    rwop = SDL_RWFromFile(filename.c_str(), "rb");
     if (rwop == nullptr)
         throw no_file();
 
-//    SDL_FreeSurface(image);             // free previously opened
     image = IMG_LoadTGA_RW(rwop);   
     SDL_RWclose(rwop);
     if(!image)
-      throw std::runtime_error("can't open " + std::string(filename));
+      throw std::runtime_error(std::string("can't open ").append(filename));
   }
-  
-  
-  
 
-  SDL_Color pixel_color(int x, int y)
+  SDL_Color pixel_color(int x, int y) const
   {
-    if((x >= image->w) || (y >= image->h))
+    size_t w = width();
+    size_t h = height();
+
+    if((x < 0) || (static_cast<size_t>(x) >= w) ||
+       (y < 0) || (static_cast<size_t>(y) >= h))
+    {
       throw std::out_of_range("searching for a pixel out of surface");
+    }
 
-    y = image->h - y;
+    y = static_cast<size_t>(h) - y;
     int bpp = image->format->BytesPerPixel;
-    Uint8 *ptr = (Uint8 *)image->pixels + y * image->pitch + x * bpp;
+    Uint8 *ptr = static_cast<Uint8*>(image->pixels) + y * image->pitch + x * bpp;
 
-    unsigned p;
+    Uint32 p;
     switch (bpp)
     {
       case 1:
@@ -75,7 +75,7 @@ public:
         break;
 
       case 2:
-        p = *(Uint16*)ptr;
+        p = *reinterpret_cast<Uint16*>(ptr);
         break;
 
       case 3:
@@ -86,7 +86,7 @@ public:
         break;
 
       case 4:
-        p = *(Uint32*)ptr;
+        p = *reinterpret_cast<Uint32*>(ptr);
         break;
 
       default:
@@ -112,32 +112,37 @@ public:
 
 
 
-
 class obj_model
 {
 private:
   std::vector<vec3d> vertices;
+  std::vector<std::vector<vec3i>> faces;
+
   double max_x;
   double min_x;
   double max_y;
   double min_y;
   double max_z;
   double min_z;
-  std::vector<std::vector<vec3i>> faces;
+
   std::vector<vec2d> texture_verts;
   tga_image diffuse;
+
 public:
-  obj_model(const char* const file)
+  obj_model(std::filesystem::path file_path)
   {
-    if (file == nullptr)
-        return;
-    std::string filename = file;
+    if(file_path.has_filename() == false)
+      throw std::runtime_error("Empty filename");
+
+    if(file_path.extension() != ".obj")
+      throw std::runtime_error("Not .obj file");
     
     std::ifstream ifs;
-    ifs.open( filename, std::ifstream::in);
+    ifs.open(file_path, std::ifstream::in);
 
     if(ifs.fail())
       throw std::ios_base::failure("Can't open model obj file");
+
     while(ifs)
     {
       std::string str;
@@ -180,8 +185,8 @@ public:
         for(size_t i = 0; i < 3; ++i)
         {
           ifs >> str;
-          char *end1;
-          char *end2;
+          char *end1 = nullptr;
+          char *end2 = nullptr;
           tmp[0] = std::strtol(str.data(), &end1, 10);
           if(end1[0] == '/')
             tmp[1] = std::strtol(end1 + 1, &end2, 10);
@@ -198,24 +203,19 @@ public:
     
      
     IMG_Init(0);
-    auto iter = filename.rbegin();     
-    for(; iter != filename.rend(); ++iter)
-    {
-      if(*iter == '.')
-        break;
-    }
-    std::string diff_name(filename.begin(), --iter.base());
-    diff_name += "_diffuse.tga";
-    
-    try{ diffuse.read_tga( diff_name.data()); }
 
-    catch( tga_image::no_file& e)
-    {   std::cout << "Warning: no texture found"  << std::endl;  }
-           
+    try
+    {
+      diffuse.read_tga(file_path.replace_extension("_diffuse.tga"));
+    }
+    catch(tga_image::no_file& e)
+    {
+      std::cout << "Warning: no texture found"  << std::endl;
+    }
   }
-  
-  
-  
+
+
+
 
   ~obj_model()
   {

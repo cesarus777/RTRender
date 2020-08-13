@@ -3,3 +3,5 @@ add_library(RTRender SHARED
     rtrenderer.cpp
     )
 
+target_link_libraries(RTRender stdc++fs)
+
